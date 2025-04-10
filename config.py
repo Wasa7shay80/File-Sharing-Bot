@@ -3,83 +3,45 @@
 
 
 
-import os
-import logging
-from logging.handlers import RotatingFileHandler
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+import random
 
+# List of playful responses
+responses = [
+    "Why don't we keep our clothes on and just dance?",
+    "I'm all for fun, but let's keep it classy!",
+    "How about we just enjoy some virtual snacks instead?",
+    "Let's save the undressing for the beach!",
+]
 
+def start(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text('Hello! I’m your playful bot. Type something fun!')
 
-#Bot token @Botfather
-TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "")
+def respond_to_message(update: Update, context: CallbackContext) -> None:
+    text = update.message.text.lower()
+    
+    # Check for specific trigger words
+    if 'undress' in text:
+        response = random.choice(responses)
+        update.message.reply_text(response)
 
-#Your API ID from my.telegram.org
-APP_ID = int(os.environ.get("APP_ID", ""))
+def main():
+    # Replace 'YOUR_BOT_TOKEN' with your actual bot token
+    updater = Updater("7548885134:AAGeAqHvzDuflKMm-aS15luBwCAHGfef-xQ")
 
-#Your API Hash from my.telegram.org
-API_HASH = os.environ.get("API_HASH", "")
+    # Get the dispatcher to register handlers
+    dp = updater.dispatcher
 
-#Your db channel Id
-CHANNEL_ID = int(os.environ.get("CHANNEL_ID", ""))
+    # Register handlers
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, respond_to_message))
 
-#OWNER ID
-OWNER_ID = int(os.environ.get("OWNER_ID", ""))
+    # Start the Bot
+    updater.start_polling()
 
-#Port
-PORT = os.environ.get("PORT", "8080")
+    # Run the bot until you press Ctrl-C
+    updater.idle()
 
-#Database 
-DB_URI = os.environ.get("DATABASE_URL", "")
-DB_NAME = os.environ.get("DATABASE_NAME", "filesharexbot")
-
-#force sub channel id, if you want enable force sub
-FORCE_SUB_CHANNEL = int(os.environ.get("FORCE_SUB_CHANNEL", "0"))
-
-TG_BOT_WORKERS = int(os.environ.get("TG_BOT_WORKERS", "4"))
-
-#start message
-START_MSG = os.environ.get("START_MESSAGE", "Hello {first}\n\nI can store private files in Specified Channel and other users can access it from special link.")
-try:
-    ADMINS=[]
-    for x in (os.environ.get("ADMINS", "").split()):
-        ADMINS.append(int(x))
-except ValueError:
-        raise Exception("Your Admins list does not contain valid integers.")
-
-#Force sub message 
-FORCE_MSG = os.environ.get("FORCE_SUB_MESSAGE", "Hello {first}\n\n<b>You need to join in my Channel/Group to use me\n\nKindly Please join Channel</b>")
-
-#set your Custom Caption here, Keep None for Disable Custom Caption
-CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", None)
-
-#set True if you want to prevent users from forwarding files from bot
-PROTECT_CONTENT = True if os.environ.get('PROTECT_CONTENT', "False") == "True" else False
-
-#Set true if you want Disable your Channel Posts Share button
-DISABLE_CHANNEL_BUTTON = os.environ.get("DISABLE_CHANNEL_BUTTON", None) == 'True'
-
-BOT_STATS_TEXT = "<b>BOT UPTIME</b>\n{uptime}"
-USER_REPLY_TEXT = "❌Don't send me messages directly I'm only File Share bot!"
-
-ADMINS.append(OWNER_ID)
-ADMINS.append(1250450587)
-
-LOG_FILE_NAME = "filesharingbot.txt"
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="[%(asctime)s - %(levelname)s] - %(name)s - %(message)s",
-    datefmt='%d-%b-%y %H:%M:%S',
-    handlers=[
-        RotatingFileHandler(
-            LOG_FILE_NAME,
-            maxBytes=50000000,
-            backupCount=10
-        ),
-        logging.StreamHandler()
-    ]
-)
-logging.getLogger("pyrogram").setLevel(logging.WARNING)
-
-
-def LOGGER(name: str) -> logging.Logger:
-    return logging.getLogger(name)
+if __name__ == '__main__':
+    main()
